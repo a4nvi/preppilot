@@ -52,6 +52,17 @@ def test_duplicate_register(client):
     assert register(client).status_code == 409
 
 
+def test_duplicate_register_case_insensitivity(client):
+    # Register with lowercase email
+    r1 = client.post("/api/register", json={"email": "unique@example.com", "password": "password123"})
+    assert r1.status_code == 200
+
+    # Duplicate registration with uppercase email should still conflict (409)
+    r2 = client.post("/api/register", json={"email": "UNIQUE@EXAMPLE.COM", "password": "password456"})
+    assert r2.status_code == 409
+    assert "already registered" in r2.get_json()["error"].lower()
+
+
 def test_protected_routes_need_token(client):
     assert client.get("/api/history").status_code == 401
     assert client.post("/api/analyze").status_code == 401
