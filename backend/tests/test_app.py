@@ -23,6 +23,30 @@ def test_register_then_login(client):
     assert client.post("/api/login", json={"email": "a@b.com", "password": "secret1"}).status_code == 200
 
 
+def test_register_and_login_empty_fields(client):
+    # Empty email
+    r1 = client.post("/api/register", json={"email": "", "password": "secretpassword"})
+    assert r1.status_code == 400
+    assert "valid email" in r1.get_json()["error"].lower()
+
+    # Empty password or password too short
+    r2 = client.post("/api/register", json={"email": "test@example.com", "password": ""})
+    assert r2.status_code == 400
+    assert "6+ characters" in r2.get_json()["error"].lower()
+
+    # Missing email / password entirely
+    assert client.post("/api/register", json={}).status_code == 400
+
+    # Password less than 6 characters
+    r3 = client.post("/api/register", json={"email": "test@example.com", "password": "123"})
+    assert r3.status_code == 400
+    assert "6+ characters" in r3.get_json()["error"].lower()
+
+    # Login with empty email/password
+    r4 = client.post("/api/login", json={"email": "", "password": ""})
+    assert r4.status_code in (400, 401)
+
+
 def test_duplicate_register(client):
     register(client)
     assert register(client).status_code == 409
