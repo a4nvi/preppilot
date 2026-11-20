@@ -57,6 +57,31 @@ def test_protected_routes_need_token(client):
     assert client.post("/api/analyze").status_code == 401
 
 
+def test_history_endpoint_and_user_isolation(client):
+    # Register user 1
+    r1 = client.post("/api/register", json={"email": "user1@example.com", "password": "password123"})
+    assert r1.status_code == 200
+    tok1 = r1.get_json()["token"]
+
+    # History should be empty initially
+    h1 = client.get("/api/history", headers={"Authorization": f"Bearer {tok1}"})
+    assert h1.status_code == 200
+    assert h1.get_json()["history"] == []
+
+    # Register user 2
+    r2 = client.post("/api/register", json={"email": "user2@example.com", "password": "password456"})
+    assert r2.status_code == 200
+    tok2 = r2.get_json()["token"]
+
+    # User 2 history is isolated and empty
+    h2 = client.get("/api/history", headers={"Authorization": f"Bearer {tok2}"})
+    assert h2.status_code == 200
+    assert h2.get_json()["history"] == []
+
+    # Invalid token rejected
+    assert client.get("/api/history", headers={"Authorization": "Bearer badtoken"}).status_code == 401
+
+
 def test_analyze_requires_inputs(client):
     tok = register(client).get_json()["token"]
     r = client.post("/api/analyze", headers={"Authorization": "Bearer " + tok}, data={"jd": "x"})
