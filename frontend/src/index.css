@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Sora', system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+body {
+  background: #0c1222;
+  color: #e6ecff;
+  font-family: var(--font-sans);
+}
+::selection {
+  background: #4f7cff66;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
