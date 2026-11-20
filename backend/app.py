@@ -38,8 +38,9 @@ def create_app(db_path=None):
 
     def uid():
         try:
-            return ser.loads(request.headers.get("Authorization", "").replace("Bearer ", ""), max_age=7 * 86400)
-        except BadSignature:
+            tok = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+            return ser.loads(tok, max_age=7 * 86400) if tok else None
+        except Exception:
             return None
 
     def err(m, c=400):
