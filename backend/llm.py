@@ -9,11 +9,14 @@ def ask(prompt):
     model = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
     try:
         r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                          params={"key": key}, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=45)
+                          params={"key": key}, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=20)
         r.raise_for_status()
         return r.json()["candidates"][0]["content"]["parts"][0]["text"]
     except Exception:
         return None
+
+
+NOTICE = "The AI service is busy or unreachable right now, so this is a basic offline result. Please try again in a minute."
 
 
 def _json(t):
@@ -28,8 +31,9 @@ def suggestions(resume, jd, missing):
             "Give 4 short, concrete suggestions to tailor this resume to the job. One per line, starting with '- '.")
     if t:
         return t
-    return ("- Add these skills if you genuinely have them: " + ", ".join(missing)) if missing else \
+    base = ("- Add these skills if you genuinely have them: " + ", ".join(missing)) if missing else \
         "- Your resume covers the listed skills. Quantify your impact with numbers."
+    return base + "\n\n" + NOTICE
 
 
 def questions(resume, jd, missing):
@@ -52,4 +56,4 @@ def evaluate(question, answer, jd):
         return max(1, min(10, int(j["score"]))), j.get("feedback", "")
     n = len(answer.split())
     return (3 if n < 20 else 5 if n < 50 else 6), \
-        "Offline mode (no API key): only answer length was checked. Add a concrete example, the result, and the skills used."
+        "Only answer length was checked. Add a concrete example, the result, and the skills used. " + NOTICE
