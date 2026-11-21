@@ -8,13 +8,13 @@ Built for **Fundamentals of Agile Software Development (26B16CS314)**, B.Tech V 
 
 ## Team
 
-| Name           | Roll No.   | Scrum Role                     |
-| -------------- | ---------- | ------------------------------ |
-| Aadya Mudgal   | 2401030368 | Product Owner                  |
-| Mokshi Mittal  | 2401030326 | Scrum Master                   |
-| Jahnavi Singh  | 2401030367 | Developer                      |
-| Shikhar Shukla | 2401030364 | Developer                      |
-| Aanvi Sawhney  | 2401030351 | Developer / QA / Documentation |
+| Name           | Roll No.   | Scrum Role         |
+| -------------- | ---------- | ------------------ |
+| Aadya Mudgal   | 2401030368 | Product Owner      |
+| Mokshi Mittal  | 2401030326 | Scrum Master       |
+| Jahnavi Singh  | 2401030367 | Developer          |
+| Shikhar Shukla | 2401030364 | Developer          |
+| Aanvi Sawhney  | 2401030351 | QA / Documentation |
 
 **Submitted to:** Dr. Indu Chawla, Mr. Akshitraj Patel
 
