@@ -23,14 +23,74 @@ def test_register_then_login(client):
     assert client.post("/api/login", json={"email": "a@b.com", "password": "secret1"}).status_code == 200
 
 
+def test_register_and_login_empty_fields(client):
+    # Empty email
+    r1 = client.post("/api/register", json={"email": "", "password": "secretpassword"})
+    assert r1.status_code == 400
+    assert "valid email" in r1.get_json()["error"].lower()
+
+    # Empty password or password too short
+    r2 = client.post("/api/register", json={"email": "test@example.com", "password": ""})
+    assert r2.status_code == 400
+    assert "6+ characters" in r2.get_json()["error"].lower()
+
+    # Missing email / password entirely
+    assert client.post("/api/register", json={}).status_code == 400
+
+    # Password less than 6 characters
+    r3 = client.post("/api/register", json={"email": "test@example.com", "password": "123"})
+    assert r3.status_code == 400
+    assert "6+ characters" in r3.get_json()["error"].lower()
+
+    # Login with empty email/password
+    r4 = client.post("/api/login", json={"email": "", "password": ""})
+    assert r4.status_code in (400, 401)
+
+
 def test_duplicate_register(client):
     register(client)
     assert register(client).status_code == 409
 
 
+def test_duplicate_register_case_insensitivity(client):
+    # Register with lowercase email
+    r1 = client.post("/api/register", json={"email": "unique@example.com", "password": "password123"})
+    assert r1.status_code == 200
+
+    # Duplicate registration with uppercase email should still conflict (409)
+    r2 = client.post("/api/register", json={"email": "UNIQUE@EXAMPLE.COM", "password": "password456"})
+    assert r2.status_code == 409
+    assert "already registered" in r2.get_json()["error"].lower()
+
+
 def test_protected_routes_need_token(client):
     assert client.get("/api/history").status_code == 401
     assert client.post("/api/analyze").status_code == 401
+
+
+def test_history_endpoint_and_user_isolation(client):
+    # Register user 1
+    r1 = client.post("/api/register", json={"email": "user1@example.com", "password": "password123"})
+    assert r1.status_code == 200
+    tok1 = r1.get_json()["token"]
+
+    # History should be empty initially
+    h1 = client.get("/api/history", headers={"Authorization": f"Bearer {tok1}"})
+    assert h1.status_code == 200
+    assert h1.get_json()["history"] == []
+
+    # Register user 2
+    r2 = client.post("/api/register", json={"email": "user2@example.com", "password": "password456"})
+    assert r2.status_code == 200
+    tok2 = r2.get_json()["token"]
+
+    # User 2 history is isolated and empty
+    h2 = client.get("/api/history", headers={"Authorization": f"Bearer {tok2}"})
+    assert h2.status_code == 200
+    assert h2.get_json()["history"] == []
+
+    # Invalid token rejected
+    assert client.get("/api/history", headers={"Authorization": "Bearer badtoken"}).status_code == 401
 
 
 def test_analyze_requires_inputs(client):

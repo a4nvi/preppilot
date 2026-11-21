@@ -38,8 +38,9 @@ def create_app(db_path=None):
 
     def uid():
         try:
-            return ser.loads(request.headers.get("Authorization", "").replace("Bearer ", ""), max_age=7 * 86400)
-        except BadSignature:
+            tok = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+            return ser.loads(tok, max_age=7 * 86400) if tok else None
+        except Exception:
             return None
 
     def err(m, c=400):
@@ -51,8 +52,9 @@ def create_app(db_path=None):
     # ---- US1: register / login
     @app.post("/api/register")
     def register():
-        d = request.get_json(force=True)
-        e, p = d.get("email", "").strip().lower(), d.get("password", "")
+        d = request.get_json(force=True) or {}
+        e = (d.get("email") or "").strip().lower()
+        p = d.get("password") or ""
         if "@" not in e or len(p) < 6:
             return err("Enter a valid email and a password of 6+ characters.")
         try:
@@ -64,9 +66,13 @@ def create_app(db_path=None):
 
     @app.post("/api/login")
     def login():
-        d = request.get_json(force=True)
-        u = db().execute("SELECT * FROM users WHERE email=?", (d.get("email", "").strip().lower(),)).fetchone()
-        if not u or not check_password_hash(u["pw"], d.get("password", "")):
+        d = request.get_json(force=True) or {}
+        e = (d.get("email") or "").strip().lower()
+        p = d.get("password") or ""
+        if not e or not p:
+            return err("Email and password are required.", 400)
+        u = db().execute("SELECT * FROM users WHERE email=?", (e,)).fetchone()
+        if not u or not check_password_hash(u["pw"], p):
             return err("Wrong email or password.", 401)
         return jsonify(token=ser.dumps(u["id"]))
 
